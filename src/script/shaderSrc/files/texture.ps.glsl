@@ -37,6 +37,20 @@ vec2 rotateVec (vec2 uv)
    return uv;
 }
 
+// 随机数
+float randomNoise(vec2 seed)
+{
+   float speed = 10.0;
+   return fract(sin(dot(seed * floor(u_time * speed), vec2(17.13, 3.71))) * 43758.5453123);
+}
+
+vec2 clampUV(vec2 uv)
+{
+   return vec2(clamp(uv.x, u_uvOffset.x, u_uvOffset.z), clamp(uv.y, u_uvOffset.y, u_uvOffset.w));
+}
+#define TAU 6.12
+#define MAX_ITER 5  // 最大迭代次数
+
 #ifdef BLUR_FILTER
 uniform vec4 strength_sig2_2sig2_gauss1;//TODO模糊的过程中会导致变暗变亮  
 uniform vec2 blurInfo;
@@ -96,20 +110,66 @@ void main() {
 #ifdef FILLTEXTURE	
    vec4 color= texture2D(texture, fract(v_texcoordAlpha.xy)*u_TexRange.zw + u_TexRange.xy);
 #else
-   vec2 uv = vec2(fract(v_texcoordAlpha.x - u_speed * u_time), v_texcoordAlpha.y);
+   vec2 uv = v_texcoordAlpha.xy;//vec2(fract(v_texcoordAlpha.x - u_speed * u_time), v_texcoordAlpha.y);
    // vec2 r_uv = vec2(linear(u_uvOffset.x, u_uvOffset.z, 0.0, 1.0, uv.x), linear(u_uvOffset.y, u_uvOffset.w, 0.0, 1.0, uv.y));
    // vec2 r_uv = vec2(clamp(uv.x, u_uvOffset.x, u_uvOffset.z), clamp(uv.y, u_uvOffset.y, u_uvOffset.w));
    vec2 r_uv = vec2(uv.x * u_size.x / u_size.z + u_uvOffset.x, uv.y * u_size.y / u_size.w + u_uvOffset.y);
-   vec4 color= texture2D(texture, r_uv);
+   vec4 color = texture2D(texture, r_uv);
 #endif
 
    if(v_useTex<=0.)color = vec4(1.,1.,1.,1.);
-   color.a *= v_color.w;
-   //color.rgb*=v_color.w;
-   color.rgb *= v_color.rgb;
-   gl_FragColor = color;
+   // color.a*= v_color.w;
+   // color.rgb*= v_color.rgb;
+   // color.rgb *= color.a;
+   // gl_FragColor= color;
    // 呼吸灯效果
-   gl_FragColor.rgb *= u_alpha;
+   // gl_FragColor.rgb *= u_alpha;
+
+   vec2 v_uv0 = r_uv;
+   vec4 o = color;
+   // 错位图块故障（Image Block Glitch）
+   // float block = randomNoise(floor(v_uv0 * 8.0));
+   // float displaceNoise = pow(block, 8.0) * pow(block, 3.0);
+   // float splitRGBNoise = pow(randomNoise(vec2(7.2341, 1.0)), 17.0);
+   // float offsetX = displaceNoise - splitRGBNoise * 1.0; 
+   // float offsetY = displaceNoise - splitRGBNoise * 1.0;
+
+   // float noiseX = 0.05 * randomNoise(vec2(13.0, 1.0));
+   // float noiseY = 0.05 * randomNoise(vec2(7.0, 1.0));
+   // vec2 offset = vec2(offsetX * noiseX, offsetY * noiseY);
+
+   // vec4 driftColor0 = texture2D(texture, clampUV(v_uv0 + offset));
+   // vec4 driftColor1 = texture2D(texture, clampUV(v_uv0 - offset));
+
+   // o = vec4(driftColor0.r, o.g, driftColor1.b, o.a + driftColor0.a + driftColor1.a);
+   // gl_FragColor = o;
+
+   vec2 p = mod(v_uv0 * TAU, TAU) - 250.;
+
+   vec2 i = vec2(p);
+   float c = 1.;
+   float inten = 0.0065;
+
+   for (int n = 0; n < MAX_ITER; ++n)
+   {
+      float t = u_time * (1.0 - (3.5 / float(n + 1)));
+      i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(1.5 * t + i.x));
+      c += 1.0 / length(vec2(p.x / (cos(i.x + t) / inten), p.y / (cos(i.y + t) / inten)));
+   }
+
+   c /= float(MAX_ITER);
+   c = 1.17 - pow(c, 1.4);
+   vec4 tex = texture2D(texture, v_uv0);
+   vec3 colour = vec3(pow(abs(c), 20.0));
+   colour = clamp(colour + vec3(0.0, 0.0, 0.0), 0.0, tex.a);
+
+   // 混合波光
+   float alpha = c * tex.a;
+   tex.r = tex.r + colour.x * alpha;
+   tex.g = tex.g + colour.y * alpha;
+   tex.b = tex.b + colour.z * alpha;
+
+   gl_FragColor = vec4(1.0) * tex;
    
    #ifdef COLOR_ADD
 	gl_FragColor = vec4(colorAdd.rgb,colorAdd.a*gl_FragColor.a);

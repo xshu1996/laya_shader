@@ -11,8 +11,10 @@ export default class CustomRender extends Laya.Sprite {
     public set texture(v : Laya.Texture) 
     {
         this._tex = v;
+        // 传入 uniform 
         this.customTexSV.u_uvOffset = v.uvrect;
         this.customTexSV.u_size = [v.width, v.height, v.bitmap.width, v.bitmap.height];
+        console.log(v.uvrect, v.bitmap.width, v.bitmap.height);
         // this.customTexSV.u_rotated
         this.width = v.width || 0;
         this.height = v.height || 0;

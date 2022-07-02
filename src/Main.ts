@@ -46,6 +46,7 @@ class Main {
 				var r = new CustomRender();
 				r.texture = tex;
 				Laya.stage.addChild(r);
+				r.pos((Laya.stage.width - r.width) / 2, (Laya.stage.height - r.height) / 2);
             }));
 		}));
 	}
