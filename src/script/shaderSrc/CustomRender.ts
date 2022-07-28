@@ -39,10 +39,8 @@ export default class CustomRender extends Laya.Sprite {
         console.log("Begin preCompile Custom Shader");
         // 给自定义的 shader 定义的唯一的标志
         Laya.ShaderDefines2D["CustomRender"] = 0x400;
-        Laya.ShaderDefines2D["OPEN_MOVE"] = 0x500;
         // 将 shader 名称与 id 映射起来
         Laya.ShaderDefines2D.reg("CustomRender", Laya.ShaderDefines2D["CustomRender"]);
-        Laya.ShaderDefines2D.reg("OPEN_MOVE", Laya.ShaderDefines2D["CustomRender"]);
         // 将 id 与 effect 绑定
         Laya.Value2D._initone(Laya.ShaderDefines2D["CustomRender"], CustomTextureSV);
         // 预编译顶点着色器和片元着色器
