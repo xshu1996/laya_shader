@@ -2,13 +2,15 @@ import { CustomTextureSV } from "./value/CustomTextureSV";
 import texture_vs from './files/texture.vs.glsl';
 import texture_ps from './files/texture.ps.glsl';
 
-export default class CustomRender extends Laya.Sprite {
+export default class CustomRender extends Laya.Image 
+{
+
     // 类似于 cocos 自定义的 effect 文件
     public customTexSV: CustomTextureSV = null;
     // 类似于 cocos effect 默认传入的 texture， 类型： Laya.Texture | Laya.RenderTexture
     private _tex: any = null;
-    
-    public set texture(v : Laya.Texture) 
+
+    public set texture(v: Laya.Texture) 
     {
         this._tex = v;
         // 传入 uniform 
@@ -19,9 +21,9 @@ export default class CustomRender extends Laya.Sprite {
         this.width = v.width || 0;
         this.height = v.height || 0;
     }
-    
+
     constructor() 
-    { 
+    {
         super();
         this.init();
     }
@@ -32,7 +34,46 @@ export default class CustomRender extends Laya.Sprite {
         // 开启自定义渲染流
         this.customRenderEnable = true;
     }
-    
+
+
+    /** 是否变灰。*/
+    get gray(): boolean
+    {
+        return this._gray;
+    }
+
+    set gray(value: boolean)
+    {
+        if (value !== this._gray)
+        {
+            this._gray = value;
+            if (this["_renderType"] & Laya.SpriteConst.CUSTOM)
+            {
+                this.customTexSV.u_gray = value ? 1 : 0;
+            }
+            else
+            {
+                Laya.UIUtils.gray(this, value);
+            }
+        }
+    }
+
+    /** 是否禁用页面，设置为true后，会变灰并且禁用鼠标。*/
+    get disabled(): boolean
+    {
+        return this._disabled;
+    }
+
+    set disabled(value: boolean)
+    {
+        if (value !== this._disabled)
+        {
+            this.gray = this._disabled = value;
+            this.mouseEnabled = !value;
+        }
+    }
+
+
     // 初始化 shader 参数
     public initShader(): void 
     {

@@ -14,6 +14,7 @@ export class CustomTextureSV extends Laya.Value2D
 	// 通过图片大小和 bitmap 大小，获取 uv 在图集中真实的位置
 	u_size: number[] = [1, 1, 1, 1]; // width,height, bitmapW, bitmapH
 	u_rotated: number = 0; // 图片在图集中是否旋转
+	u_gray: number = 0;
 
 	constructor(subID: number = 0)
 	{

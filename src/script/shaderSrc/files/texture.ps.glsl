@@ -15,6 +15,7 @@ uniform float u_alpha;
 uniform float u_speed;
 uniform float u_time;
 uniform float u_rotated;
+uniform float u_gray;
 uniform vec4 u_uvOffset;
 uniform vec4 u_size;
 varying vec2 cliped;
@@ -211,4 +212,8 @@ void main() {
 	gl_FragColor.rgb *= gl_FragColor.a;   
    #endif
 
+   if (u_gray > 0.5)
+   {
+      gl_FragColor.rgb *= vec3(0.299, 0.587, 0.114);
+   }
 }
